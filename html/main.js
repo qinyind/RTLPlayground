@@ -15,18 +15,42 @@ var currentRequests = [];
 var currentCallback;
 function drawPorts() {
   var f = document.getElementById('ports');
+  if (!f)
+    return;
+  f.innerHTML = '';
+  var sfpNumber = 0;
   console.log("DRAWING PORTS: ", numPorts);
   for (let i = 0; i < numPorts; i++) {
     console.log("DRAWING isSFP: ", pIsSFP[i]);
     const d = document.createElement("div");
-    d.classList.add('tooltip');
+    d.classList.add('port-node');
+    const label = document.createElement("span");
+    label.classList.add('port-label');
+    if (pIsSFP[i]) sfpNumber++;
+    label.textContent = pIsSFP[i] ? 'SFP+ ' + sfpNumber : t('common_port') + (i + 1);
+    const iconWrap = document.createElement("div");
+    iconWrap.classList.add('port-icon', 'tooltip');
+    iconWrap.tabIndex = 0;
+    iconWrap.setAttribute('role', 'button');
+    iconWrap.setAttribute('aria-label', (pIsSFP[i] ? 'SFP+ ' + sfpNumber : t('common_port') + (i + 1)) + ' details');
+    iconWrap.setAttribute('aria-expanded', 'false');
+    iconWrap.onclick = function() {
+      var open = this.classList.toggle('is-open');
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    iconWrap.onkeydown = function(event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        this.onclick();
+      }
+    };
     const s = document.createElement("span");
     s.classList.add("tooltiptext");
     s.innerHTML = t('common_port');
     s.id="tt_" + (i+1);
     const l = document.createElement("object");
-    d.appendChild(l);
-    d.appendChild(s);
+    iconWrap.appendChild(l);
+    iconWrap.appendChild(s);
     l.type = "image/svg+xml";
     if (!pIsSFP[i]) {
       l.data = "port.svg";
@@ -38,8 +62,29 @@ function drawPorts() {
       l.height = "60";
     }
     l.id="port" + (i+1);
+    const state = document.createElement("span");
+    state.classList.add('port-link-state', 'is-down');
+    state.id = "port_state_" + (i + 1);
+    state.textContent = t('speed_down');
+    d.appendChild(label);
+    d.appendChild(iconWrap);
+    d.appendChild(state);
     f.appendChild(d);
   }
+}
+
+function updateDashboardSummary() {
+  var active = 0;
+  for (var i = 0; i < numPorts; i++) {
+    if (pState[i] > 0)
+      active++;
+  }
+  var activeElement = document.getElementById('summaryActiveLinks');
+  if (activeElement)
+    activeElement.textContent = active + ' / ' + numPorts;
+  var portElement = document.getElementById('summaryPortCount');
+  if (portElement)
+    portElement.textContent = String(numPorts);
 }
 
 function parseUint16(val) {
@@ -125,6 +170,7 @@ function update(callback) {
     if (this.readyState == 4 && this.status == 401)
 	    document.location = "/login.html"
     if (this.readyState == 4 && this.status == 200) {
+      if (typeof setGlobalDeviceState === 'function') setGlobalDeviceState('online');
       const s = JSON.parse(xhttp.responseText);
       if (!numPorts) {
 	numPorts = s.length;
@@ -145,6 +191,7 @@ function update(callback) {
 	txG[n] = BigInt(p.txG); txB[n] = BigInt(p.txB); rxG[n] = BigInt(p.rxG); rxB[n] = BigInt(p.rxB);
 	var psvg = document.getElementById(pid);
 	var tt = document.getElementById(ttid);
+	var stateLabel = document.getElementById("port_state_" + (n + 1));
 	if (psvg == null || !psvg.contentDocument)
 	  continue;
 	var bgs = psvg.contentDocument.getElementsByClassName("bg");
@@ -159,12 +206,20 @@ function update(callback) {
 	  bgs[0].style.fill = "red";
 	  leds[0].style.fill = "black"; leds[1].style.fill = "black";
 	  psvg.style.opacity = 0.4;
+	  if (stateLabel) {
+	    stateLabel.textContent = t('speed_disabled');
+	    stateLabel.className = 'port-link-state is-disabled';
+	  }
 	  iHTML += "<tr><td align=\"left\">" + t('port_status') + "</td><td>:</td><td>" + t('port_not_enabled') + "</td></tr>";
 	  iHTML += "</table>";
 	  tt.innerHTML = iHTML;
 	} else {
 	  psvg.style.opacity = 1.0;
 	  pState[n] = p.link;
+	  if (stateLabel) {
+	    stateLabel.textContent = linkText(p.link + 1);
+	    stateLabel.className = 'port-link-state ' + (p.link > 0 ? 'is-up' : 'is-down');
+	  }
 	  if (p.link == 5 || p.link == 7) {
 	    leds[0].style.fill = "green"; leds[1].style.fill = "blue";
 	  } else if (p.link == 4 || p.link == 6) {
@@ -207,9 +262,16 @@ function update(callback) {
 	  iHTML += "</table>";
 	  tt.innerHTML = iHTML;
 	}}
+	updateDashboardSummary();
 	if (callback)
 	  callback();
 	}};
+	xhttp.onerror = function() {
+	  if (typeof setGlobalDeviceState === 'function') setGlobalDeviceState('offline');
+	};
+	xhttp.ontimeout = function() {
+	  if (typeof setGlobalDeviceState === 'function') setGlobalDeviceState('offline');
+	};
 	xhttp.open("GET", "/status.json", true);
 	xhttp.timeout = 5000;
 	sendXHTTP(xhttp);
@@ -284,4 +346,3 @@ function sendXHTTP(x)
   }
   currentRequests.push(x);
 }
-

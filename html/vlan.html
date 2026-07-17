@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/main.js"></script>
   <script src="/i18n.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -7,38 +9,32 @@
   </head>
   <body>
     <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
-    <h1 data-i18n="vlan_heading">VLAN Configuration</h1>
-    <form id="vform" action="/vlan.html">
-      <div>
-        <label for="vlanSelect" data-i18n="vlan_select">VLAN Select:</label>
-        <select id="vlanSelect" style="margin: 0 0 0 8px">
-          <option value="" disabled selected data-i18n="vlan_choose">— VLAN Choose —</option>
-        </select>
-      </div>
-      <br/>
-      <div>
-        <label for="vid" data-i18n="vlan_id">VLAN ID:</label>
-        <input type="number" min="1" max="4094" id="vid" name="vid">
-        <button type="button" style="margin: 0 0 0 24px" onclick="fetchVLAN();" data-i18n="vlan_get_config">Get Configuration</button>
-      </div>
-      <br/><br/>
-      <label for="vname" data-i18n="vlan_name">VLAN Name:</label>
-      <input type="text" id="vname" name="vname"><br><br>
-      <br/>
-      <h2 data-i18n="vlan_tagged">Tagged Ports</h2>
-      <div id="tPorts"><button type="button" style="transform: translateY(-100%);margin: 0 50px 0 0" onclick="utClicked(true);" data-i18n="vlan_select_all">Select all</button></div>
-      <h2 data-i18n="vlan_untagged">Untagged Ports</h2>
-      <div id="uPorts"><button type="button" style="transform: translateY(-100%); margin: 0 50px 0 0" onclick="utClicked(false);" data-i18n="vlan_select_all">Select all</button> </div>
-      <h2 data-i18n="vlan_pvid">Use as default VLAN for incoming traffic (PVID)</h2>
-      <div id="pPorts"><button type="button" style="transform: translateY(-100%); margin: 0 50px 0 0" onclick="pvClicked(true);" data-i18n="vlan_select_all">Select all</button> </div>
-      <script src="/vlan.js"></script>
-      <br/> <input style="width:40%;" class="action" id="vlan_sub" onclick="vlanSub();" type="button" data-i18n="vlan_update" value="Update / Create">
-      <script src="/vlan_sub.js"></script>
-    </form>
-    <h2 data-i18n="vlan_configured">Configured VLANs</h2>
-    <table id="vlanTable" style="width:90%">
+    <div class="page-shell">
+      <header class="page-heading">
+        <div><span class="eyebrow" data-i18n="vlan_eyebrow">NETWORK SEGMENTATION</span><h1 data-i18n="vlan_heading">VLAN Configuration</h1><p data-i18n="vlan_description">Create IEEE 802.1Q VLANs and assign port membership.</p></div>
+        <span class="status-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span>
+      </header>
+      <section class="panel port-status-panel">
+        <div class="panel-heading"><div><h2 data-i18n="ui_port_status">Port Status</h2><p data-i18n="ui_live_link_state">Live physical link state</p></div><span class="live-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span></div>
+        <div id="ports"></div>
+      </section>
+      <form id="vform" action="/vlan.html" class="panel configuration-panel">
+        <div class="panel-heading"><div><h2 data-i18n="vlan_editor">Create or Edit VLAN</h2><p data-i18n="vlan_editor_description">Choose an existing VLAN or enter a new VLAN ID.</p></div></div>
+        <div class="field-grid vlan-fields">
+          <label><span data-i18n="vlan_select">VLAN Select:</span><select id="vlanSelect"><option value="" disabled selected data-i18n="vlan_choose">— VLAN Choose —</option></select></label>
+          <label><span data-i18n="vlan_id">VLAN ID:</span><span class="inline-control"><input type="number" min="1" max="4094" id="vid" name="vid"><button type="button" class="secondary-button" onclick="fetchVLAN();" data-i18n="vlan_get_config">Get Configuration</button></span></label>
+          <label><span data-i18n="vlan_name">VLAN Name:</span><input type="text" id="vname" name="vname" data-i18n-placeholder="vlan_name_placeholder" placeholder="Management"></label>
+        </div>
+        <div class="port-assignment-grid">
+          <section><div class="subsection-heading"><h3 data-i18n="vlan_tagged">Tagged Ports</h3><button type="button" class="text-button" onclick="utClicked(true);" data-i18n="vlan_select_all">Select all</button></div><div id="tPorts" class="port-picker"></div></section>
+          <section><div class="subsection-heading"><h3 data-i18n="vlan_untagged">Untagged Ports</h3><button type="button" class="text-button" onclick="utClicked(false);" data-i18n="vlan_select_all">Select all</button></div><div id="uPorts" class="port-picker"></div></section>
+          <section><div class="subsection-heading"><h3 data-i18n="vlan_pvid">Use as default VLAN for incoming traffic (PVID)</h3><button type="button" class="text-button" onclick="pvClicked(true);" data-i18n="vlan_select_all">Select all</button></div><div id="pPorts" class="port-picker"></div></section>
+        </div>
+        <div class="form-actions"><input class="action" id="vlan_sub" onclick="vlanSub();" type="button" data-i18n="vlan_update" value="Update / Create"></div>
+      </form>
+      <section class="panel table-panel">
+      <div class="panel-heading"><div><h2 data-i18n="vlan_configured">Configured VLANs</h2><p data-i18n="vlan_configured_description">Select a VLAN ID to edit its current membership.</p></div></div>
+      <table id="vlanTable">
       <thead>
         <tr>
           <th>VLAN</th>
@@ -52,7 +48,10 @@
       </thead>
       <tbody id="vlanTableBody">
       </tbody>
-    </table>
+      </table>
+      </section>
+      <script src="/vlan.js"></script>
+      <script src="/vlan_sub.js"></script>
     </div>
     <script src="/navigation.js"></script>
   </body>

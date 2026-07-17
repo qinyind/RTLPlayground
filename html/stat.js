@@ -105,6 +105,8 @@ const mib_counters = [
   "TX Error Counter PHY", 4
 ];
 
+var popupReturnFocus = null;
+
 
 function getCounters(port) {
   var xhttp = new XMLHttpRequest();
@@ -147,7 +149,9 @@ function getCounters(port) {
         }
       }
       ptext.innerHTML = tableHtml + "</tr></table>";
+      popupReturnFocus = document.activeElement;
       popup.style.display = 'flex';
+      popup.querySelector('.popup-content').focus();
     }
   };
   xhttp.open("GET", "/counters.json?port=" + port, true);
@@ -159,6 +163,24 @@ function fillStats() {
   var tbl = document.getElementById('statstable');
   if (!numPorts)
     return;
+  var totalTx = 0n, totalRx = 0n, totalErrors = 0n;
+  for (let i = 0; i < numPorts; i++) {
+    totalTx += txG[i];
+    totalRx += rxG[i];
+    totalErrors += txB[i] + rxB[i];
+  }
+  function compact(value) {
+    if (value >= 1000000000n) return (Number(value / 10000000n) / 100).toFixed(2) + 'B';
+    if (value >= 1000000n) return (Number(value / 10000n) / 100).toFixed(2) + 'M';
+    if (value >= 1000n) return (Number(value / 10n) / 100).toFixed(2) + 'K';
+    return value.toString();
+  }
+  var rxSummary = document.getElementById('summaryRx');
+  var txSummary = document.getElementById('summaryTx');
+  var errorSummary = document.getElementById('summaryErrors');
+  if (rxSummary) rxSummary.textContent = compact(totalRx);
+  if (txSummary) txSummary.textContent = compact(totalTx);
+  if (errorSummary) errorSummary.textContent = compact(totalErrors);
   if (tbl.rows.length > 1) {
     for (let i = 0; i < numPorts; i++) {
       console.log("Table Update row: " + i + " state " + pState[i] + " is " + linkS[pState[i] +1]);
@@ -184,17 +206,28 @@ function fillStats() {
       td = tr.insertCell(); td.innerHTML = button;
     }
   }
+  for (let i = 0; i < numPorts; i++) {
+    var row = tbl.rows[i + 1];
+    if (!row) continue;
+    row.cells[4].classList.toggle('counter-error', txB[i] > 0n);
+    row.cells[6].classList.toggle('counter-error', rxB[i] > 0n);
+  }
 }
 
 const popup = document.getElementById('popup');
 const closePopup = document.getElementById('closePopup');
-closePopup.addEventListener('click', () => {
+function hideStatisticsPopup() {
   popup.style.display = 'none';
-});
+  if (popupReturnFocus && popupReturnFocus.focus) popupReturnFocus.focus();
+}
+closePopup.addEventListener('click', hideStatisticsPopup);
 window.addEventListener('click', (event) => {
   if (event.target === popup) {
-    popup.style.display = 'none';
+    hideStatisticsPopup();
   }
+});
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && popup.style.display === 'flex') hideStatisticsPopup();
 });
 
 window.addEventListener("load", function() {

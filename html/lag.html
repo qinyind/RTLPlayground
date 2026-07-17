@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/main.js"></script>
   <script src="/i18n.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -7,21 +9,23 @@
   </head>
   <body>
     <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
-    <h1 data-i18n="lag_heading">Link Aggregation Groups Configuration</h1>
-    <h2>LAG 1 <input style="width:15%;margin-left: 3em;" class="action" id="l_sub0" onclick="lagSub(0);" type="button" data-i18n="lag_update" value="Update / Create"></h2>
-    <div id="mLAG0"></div>
-    <br />
-    <h2>LAG 2 <input style="width:15%;margin-left: 3em;" class="action" id="l_sub1" onclick="lagSub(1);" type="button" data-i18n="lag_update" value="Update / Create"></h2>
-    <div id="mLAG1"></div>
-    <br />
-    <h2>LAG 3 <input style="width:15%;margin-left: 3em;" class="action" id="l_sub2" onclick="lagSub(2);" type="button" data-i18n="lag_update" value="Update / Create"></h2>
-    <div id="mLAG2"></div>
-    <br />
-    <h2>LAG 4 <input style="width:15%;margin-left: 3em;" class="action" id="l_sub3" onclick="lagSub(3);" type="button" data-i18n="lag_update" value="Update / Create"></h2>
-    <div id="mLAG3"></div>
-    <script src="/lag.js"></script>
+    <div class="page-shell">
+      <header class="page-heading">
+        <div><span class="eyebrow" data-i18n="lag_eyebrow">LINK RESILIENCY</span><h1 data-i18n="lag_heading">Link Aggregation Groups Configuration</h1><p data-i18n="lag_description">Combine physical interfaces into up to four logical links.</p></div>
+        <span class="status-pill neutral" data-i18n="lag_availability">4 groups available</span>
+      </header>
+      <section class="panel port-status-panel">
+        <div class="panel-heading"><div><h2 data-i18n="ui_port_status">Port Status</h2><p data-i18n="ui_live_link_state">Live physical link state</p></div><span class="live-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span></div>
+        <div id="ports"></div>
+      </section>
+      <div class="info-banner"><span class="banner-icon">i</span><div><strong data-i18n="lag_static_title">Static link aggregation</strong><p data-i18n="lag_static_description">Select interfaces with matching speed and duplex settings. A port can belong to one group only.</p></div></div>
+      <section class="lag-grid">
+        <article class="panel lag-card"><div class="panel-heading"><div><h2>LAG 1</h2><p data-i18n="lag_select_members">Select member ports</p></div><span class="table-meta"><span data-i18n="lag_group">Group</span> 1</span></div><div id="mLAG0" class="port-picker"></div><div class="form-actions"><input class="action" id="l_sub0" onclick="lagSub(0);" type="button" data-i18n="lag_update" value="Update / Create"></div></article>
+        <article class="panel lag-card"><div class="panel-heading"><div><h2>LAG 2</h2><p data-i18n="lag_select_members">Select member ports</p></div><span class="table-meta"><span data-i18n="lag_group">Group</span> 2</span></div><div id="mLAG1" class="port-picker"></div><div class="form-actions"><input class="action" id="l_sub1" onclick="lagSub(1);" type="button" data-i18n="lag_update" value="Update / Create"></div></article>
+        <article class="panel lag-card"><div class="panel-heading"><div><h2>LAG 3</h2><p data-i18n="lag_select_members">Select member ports</p></div><span class="table-meta"><span data-i18n="lag_group">Group</span> 3</span></div><div id="mLAG2" class="port-picker"></div><div class="form-actions"><input class="action" id="l_sub2" onclick="lagSub(2);" type="button" data-i18n="lag_update" value="Update / Create"></div></article>
+        <article class="panel lag-card"><div class="panel-heading"><div><h2>LAG 4</h2><p data-i18n="lag_select_members">Select member ports</p></div><span class="table-meta"><span data-i18n="lag_group">Group</span> 4</span></div><div id="mLAG3" class="port-picker"></div><div class="form-actions"><input class="action" id="l_sub3" onclick="lagSub(3);" type="button" data-i18n="lag_update" value="Update / Create"></div></article>
+      </section>
+      <script src="/lag.js"></script>
     </div>
     <script src="/navigation.js"></script>
   </body>

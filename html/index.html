@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/main.js"></script>
   <script src="/main_info.js"></script>
   <script src="/i18n.js"></script>
@@ -16,16 +18,38 @@
 
 <body>
   <nav id="sidebar"></nav>
-  <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
-    <h1 data-i18n="index_heading">Switch Configuration</h1>
-    <table id="infoTable">
-      <tr>
-        <th colspan="2" data-i18n="index_settings">Settings</th>
-      </tr>
-      <tbody>
-      </tbody>
-    </table>
+  <div class="page-shell">
+    <header class="page-heading">
+      <div>
+        <span class="eyebrow" data-i18n="index_eyebrow">RTL837x SWITCH</span>
+        <h1 data-i18n="index_heading">Overview</h1>
+        <p data-i18n="index_description">Live device health, link state, and firmware information.</p>
+      </div>
+      <span class="status-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span>
+    </header>
+
+    <section class="panel port-status-panel">
+      <div class="panel-heading">
+        <div><h2 data-i18n="ui_port_status">Port Status</h2><p data-i18n="ui_live_link_state">Live physical link state</p></div>
+        <span class="live-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span>
+      </div>
+      <div id="ports"></div>
+    </section>
+
+    <section class="metric-grid">
+      <article class="metric-card"><span id="summaryDeviceStatusIcon" class="metric-icon">?</span><div><span data-i18n="ui_device_status">Device Status</span><strong id="summaryDeviceStatus" data-i18n="ui_unknown">Unknown</strong><small id="summaryDeviceStatusDetail" data-i18n="ui_waiting_status">Waiting for device status</small></div></article>
+      <article class="metric-card"><span class="metric-icon">IP</span><div><span data-i18n="ui_management_ip">Management IP</span><strong id="summaryManagementIp">—</strong><small data-i18n="ui_current_address">Current address</small></div></article>
+      <article class="metric-card"><span class="metric-icon success">&#8734;</span><div><span data-i18n="ui_active_links">Active Links</span><strong id="summaryActiveLinks">0 / 0</strong><small data-i18n="ui_connected_ports">Connected ports</small></div></article>
+      <article class="metric-card"><span class="metric-icon">FW</span><div><span data-i18n="ui_firmware">Firmware</span><strong id="summaryFirmware">—</strong><small id="summaryHardware">RTLPlayground</small></div></article>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading"><div><h2 data-i18n="ui_system_information">System Information</h2><p data-i18n="ui_system_details">Runtime and hardware details reported by the switch</p></div></div>
+      <table id="infoTable">
+        <thead><tr><th colspan="2" data-i18n="index_settings">Settings</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
   </div>
   <script src="/navigation.js"></script>
 </body>

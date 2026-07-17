@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/main.js"></script>
   <script src="/i18n.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -7,14 +9,24 @@
   </head>
   <body>
     <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
-    <h1 data-i18n="l2_heading">L2 Configuration</h1>
-    <table id="l2table">
-      <tr> <th data-i18n="l2_col_port">Port</th> <th>MAC</th> <th>VLAN</th> <th data-i18n="l2_col_type">Type</th> <th data-i18n="l2_col_remove">Remove Entry</th></tr>
+    <div class="page-shell">
+      <header class="page-heading">
+        <div><span class="eyebrow" data-i18n="l2_eyebrow">FORWARDING DATABASE</span><h1 data-i18n="l2_heading">L2 Configuration</h1><p data-i18n="l2_description">Review learned and static MAC forwarding entries.</p></div>
+        <span class="status-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span>
+      </header>
+      <section class="panel port-status-panel">
+        <div class="panel-heading"><div><h2 data-i18n="ui_port_status">Port Status</h2><p data-i18n="ui_live_link_state">Live physical link state</p></div><span class="live-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span></div>
+        <div id="ports"></div>
+      </section>
+      <div class="info-banner"><span class="banner-icon">i</span><div><strong data-i18n="l2_learning_title">MAC learning is active</strong><p data-i18n="l2_learning_description">The forwarding database refreshes automatically. Static entries can be removed from the action column.</p></div></div>
+      <section class="panel table-panel">
+        <div class="panel-heading"><div><h2 data-i18n="l2_table_heading">MAC Address Table</h2><p data-i18n="l2_table_description">Dynamic and static forwarding entries</p></div><span class="table-meta" data-i18n="ui_auto_refresh">Auto refresh</span></div>
+        <table id="l2table">
+          <tr> <th data-i18n="l2_col_port">Port</th> <th>MAC</th> <th>VLAN</th> <th data-i18n="l2_col_type">Type</th> <th data-i18n="l2_col_remove">Remove Entry</th></tr>
+        </table>
+      </section>
       <script src="/l2.js"></script>
-    </table>
     </div>
+    <script src="/navigation.js"></script>
   </body>
-  <script src="/navigation.js"></script>
 </html>

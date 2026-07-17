@@ -1,4 +1,8 @@
 async function mirrorSub() {
+  if (!document.getElementById('me').checked) {
+    await mirrorDel();
+    return;
+  }
   var cmd = "mirror ";
   var mp=document.getElementById('mp').value
   if (!mp) {

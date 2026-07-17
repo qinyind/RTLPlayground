@@ -1,20 +1,43 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/main.js"></script>
     <script src="/i18n.js"></script>
     <link rel="stylesheet" href="style.css">
     <title data-i18n="update_title">Firmware update</title>
   </head>
   <body>
     <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;width:40%;">
-    <h1 data-i18n="update_heading">Firmware Update</h1>
-    <form enctype="multipart/form-data" action="/upload" method="POST">
-    <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
-      <span data-i18n="update_instruction">Choose a firmware update file to upload:</span> <br/> <br/>
-      <input name="uploadedfile" type="file" accept=".bin" /><br />
-    <input style="margin-top:3em" type="submit" data-i18n="update_upload" value="Upload File" />
-    </form>
+    <div class="page-shell">
+      <header class="page-heading">
+        <div><span class="eyebrow" data-i18n="update_eyebrow">MAINTENANCE</span><h1 data-i18n="update_heading">Firmware Update</h1><p data-i18n="update_description">Upload a compatible firmware image to this switch.</p></div>
+        <span class="status-pill neutral" data-i18n="update_admin_action">Administrator action</span>
+      </header>
+      <section class="panel port-status-panel">
+        <div class="panel-heading"><div><h2 data-i18n="ui_port_status">Port Status</h2><p data-i18n="update_connectivity_description">Confirm management connectivity before updating</p></div><span class="live-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span></div>
+        <div id="ports"></div>
+      </section>
+      <div class="content-grid update-grid">
+        <form class="panel upload-panel" enctype="multipart/form-data" action="/upload" method="POST">
+          <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
+          <div class="panel-heading"><div><h2 data-i18n="update_upload_heading">Upload Firmware</h2><p data-i18n="update_instruction">Choose a firmware update file to upload:</p></div></div>
+          <label class="upload-dropzone">
+            <span class="upload-icon" aria-hidden="true">&#8679;</span>
+            <strong data-i18n="update_select_image">Select a firmware image</strong>
+            <span data-i18n="update_file_requirements">Accepted file type: .bin · Maximum size: 1 MB</span>
+            <input name="uploadedfile" type="file" accept=".bin" required />
+          </label>
+          <div class="form-actions"><input type="submit" data-i18n="update_upload" value="Upload File" /></div>
+          <p class="muted-note" data-i18n="update_reboot_note">The switch reboots automatically after a successful update.</p>
+        </form>
+        <aside class="update-aside">
+          <section class="panel summary-panel"><div class="panel-heading"><div><h2 data-i18n="update_compatibility">Compatibility</h2><p data-i18n="update_image_requirements">Image requirements</p></div></div><dl class="detail-list"><div><dt data-i18n="update_platform">Platform</dt><dd data-i18n="update_rtl_series">RTL837x series</dd></div><div><dt data-i18n="update_format">Format</dt><dd data-i18n="update_raw_firmware">Raw firmware (.bin)</dd></div><div><dt data-i18n="update_validation">Validation</dt><dd data-i18n="update_machine_specific">Machine-specific</dd></div></dl></section>
+          <section class="warning-card"><h2><span>!</span> <span data-i18n="update_before">Before You Update</span></h2><ul class="check-list"><li data-i18n="update_note_1">Verify the image matches the exact PCB and MACHINE target.</li><li data-i18n="update_note_2">Keep power and Ethernet connected.</li><li data-i18n="update_note_3">Preserve a backup of the original SPI flash.</li><li data-i18n="update_note_4">Do not close the browser during upload.</li></ul></section>
+        </aside>
+      </div>
+    </div>
     <script src="/navigation.js"></script>
+    <script>window.addEventListener('load', function() { update(function() { setInterval(update, 2000); }); });</script>
   </body>
 </html>
