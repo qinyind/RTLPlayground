@@ -57,7 +57,7 @@ device simulator is provided, which runs entirely under Linux as a local webserv
 Install the following particular build requisites (Debian 12/13), note that Ubuntu 24.04
 still has an older version of sdcc, but you will need sdcc version 4.5 for the code to compile:
 ```
-sudo apt install make gcc sdcc xxd python-is-python3 libjson-c-dev
+sudo apt install make gcc sdcc xxd python-is-python3 libjson-c-dev zlib1g-dev
 ```
 
 ## (1) Compiling for direct chip flashing AND upgrading an existing RTLPlayground running device

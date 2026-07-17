@@ -1,48 +1,44 @@
 <!DOCTYPE html>
 <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/main.js"></script>
   <script src="/i18n.js"></script>
   <link rel="stylesheet" href="style.css">
   <title data-i18n="stat_title">FreeSwitchOS Port Statistics</title>
-  <style>
-    .popup {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      justify-content: center;
-      align-items: center;
-    }
-    .popup-content {
-      background: #fff;
-      padding: 20px;
-      border-radius: 5px;
-      text-align: center;
-      height: 80%
-    }
-    .popup .popup-content {
-       overflow-y: scroll;
-    }
-    </style>
   </head>
   <body>
     <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
-    <div id="popup" class="popup">
-        <div class="popup-content">
-            <h2 data-i18n="stat_detailed">Detailed Port Statistics</h2>
+    <div class="page-shell">
+      <header class="page-heading">
+        <div><span class="eyebrow" data-i18n="stat_eyebrow">MONITORING</span><h1 data-i18n="stat_heading">Port Statistics</h1><p data-i18n="stat_description">Inspect live traffic counters and link health.</p></div>
+        <button type="button" class="secondary-button" onclick="location.reload()">&#8635; <span data-i18n="ui_refresh">Refresh</span></button>
+      </header>
+      <section class="panel port-status-panel">
+        <div class="panel-heading"><div><h2 data-i18n="ui_port_status">Port Status</h2><p data-i18n="ui_live_link_state">Live physical link state</p></div><span class="live-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span></div>
+        <div id="ports"></div>
+      </section>
+      <div id="popup" class="popup" role="dialog" aria-modal="true" aria-labelledby="statisticsDialogTitle">
+        <div class="popup-content" tabindex="-1">
+            <h2 id="statisticsDialogTitle" data-i18n="stat_detailed">Detailed Port Statistics</h2>
             <div id="popup_text"></div>
             <button id="closePopup" class="action" data-i18n="stat_close">Close</button>
         </div>
-    </div>
-    <h1 data-i18n="stat_heading">Port Statistics</h1>
-    <table id="statstable">
-      <tr> <th data-i18n="stat_col_port">Port</th> <th data-i18n="stat_col_name">Name</th> <th data-i18n="stat_col_link">link</th> <th data-i18n="stat_col_tx_good">TX Good</th> <th data-i18n="stat_col_tx_bad">TX Bad</th> <th data-i18n="stat_col_rx_good">RX Good</th> <th data-i18n="stat_col_rx_bad">RX Bad</th> <th data-i18n="stat_col_all"> All Counters </th></tr>
+      </div>
+      <section class="metric-grid metric-grid-compact">
+        <article class="metric-card"><span class="metric-icon success">&#8734;</span><div><span data-i18n="stat_active_ports">Active Ports</span><strong id="summaryActiveLinks">0 / 0</strong><small data-i18n="stat_links_up">Links currently up</small></div></article>
+        <article class="metric-card"><span class="metric-icon">&#8595;</span><div><span data-i18n="stat_total_rx">Total RX</span><strong id="summaryRx">0</strong><small data-i18n="stat_good_packets">Good packets</small></div></article>
+        <article class="metric-card"><span class="metric-icon success">&#8593;</span><div><span data-i18n="stat_total_tx">Total TX</span><strong id="summaryTx">0</strong><small data-i18n="stat_good_packets">Good packets</small></div></article>
+        <article class="metric-card"><span class="metric-icon danger">!</span><div><span data-i18n="stat_errors">Errors</span><strong id="summaryErrors">0</strong><small data-i18n="stat_bad_packets">RX + TX bad packets</small></div></article>
+      </section>
+      <section class="panel table-panel">
+        <div class="panel-heading"><div><h2 data-i18n="stat_traffic_counters">Traffic Counters</h2><p data-i18n="stat_counters_description">Port-level counters update automatically</p></div></div>
+        <table id="statstable">
+          <tr> <th data-i18n="stat_col_port">Port</th> <th data-i18n="stat_col_name">Name</th> <th data-i18n="stat_col_link">link</th> <th data-i18n="stat_col_tx_good">TX Good</th> <th data-i18n="stat_col_tx_bad">TX Bad</th> <th data-i18n="stat_col_rx_good">RX Good</th> <th data-i18n="stat_col_rx_bad">RX Bad</th> <th data-i18n="stat_col_all"> All Counters </th></tr>
+        </table>
+      </section>
       <script src="/stat.js"></script>
-    </table>
     </div>
+    <script src="/navigation.js"></script>
   </body>
-  <script src="/navigation.js"></script>
 </html>

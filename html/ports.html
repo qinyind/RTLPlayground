@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/main.js"></script>
   <script src="/i18n.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -7,18 +9,28 @@
   </head>
   <body>
     <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
-    <h1 data-i18n="port_heading">Port Configuration</h1>
-    <form id="vform" action="/vlan.html">
-    <table id="speedtable">
-      <tr> <th data-i18n="port_col_port">Port</th> <th data-i18n="port_col_name">Name</th> <th data-i18n="port_col_speed">Current Link Speed</th><th data-i18n="port_col_set_speed">Set Speed</th><th data-i18n="port_col_disabled">Disabled</th><th data-i18n="port_col_apply">Apply</th></tr>
-    </table>
-    <h2 style="margin-top:3em" data-i18n="port_mtu_heading">Configure Maximum Frame Size (MTU) forwarded at Port</h2>
-    <table id="mtutable" style="margin-top:1em">
-    </table>
-    <script src="/ports.js"></script>
-    </form>
+    <div class="page-shell">
+      <header class="page-heading">
+        <div><span class="eyebrow" data-i18n="port_eyebrow">INTERFACES</span><h1 data-i18n="port_heading">Port Configuration</h1><p data-i18n="port_description">Configure copper link negotiation and per-port frame size.</p></div>
+        <span class="status-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span>
+      </header>
+      <section class="panel port-status-panel">
+        <div class="panel-heading"><div><h2 data-i18n="ui_port_status">Port Status</h2><p data-i18n="ui_live_link_state">Live physical link state</p></div><span class="live-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span></div>
+        <div id="ports"></div>
+      </section>
+      <form id="vform" action="/vlan.html">
+        <section class="panel table-panel">
+          <div class="panel-heading"><div><h2 data-i18n="port_settings">Port Settings</h2><p data-i18n="port_settings_description">Apply speed and administrative state per interface</p></div></div>
+          <table id="speedtable">
+            <tr> <th data-i18n="port_col_port">Port</th> <th data-i18n="port_col_name">Name</th> <th data-i18n="port_col_speed">Current Link Speed</th><th data-i18n="port_col_set_speed">Set Speed</th><th data-i18n="port_col_disabled">Disabled</th><th data-i18n="port_col_apply">Apply</th></tr>
+          </table>
+        </section>
+        <section class="panel table-panel">
+          <div class="panel-heading"><div><h2 data-i18n="port_mtu_heading">Maximum Frame Size (MTU)</h2><p data-i18n="port_mtu_description">Select and apply the forwarded frame size for each port.</p></div></div>
+          <table id="mtutable"></table>
+        </section>
+      </form>
+      <script src="/ports.js"></script>
     </div>
     <script src="/navigation.js"></script>
   </body>

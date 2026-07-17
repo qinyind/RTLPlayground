@@ -43,10 +43,10 @@ SRCS += uip/timer.c uip/uip.c uip/uip_arp.c uip/uiplib.c uip/uip-fw.c uip/uip-ne
 SRCS += httpd/httpd.c httpd/page_impl.c
 OBJS = ${SRCS:%.c=$(BUILDDIR)/%.rel}
 DEPS := ${SRCS:%.c=$(BUILDDIR)/%.d}
-HTML := $(shell find $(html) -name '*.js' -or -name '*.html' -or -name '*.svg')
+HTML := $(shell find html -maxdepth 1 -type f \( -name '*.js' -o -name '*.html' -o -name '*.svg' -o -name '*.css' -o -name '*.ico' -o -name '*.png' -o -name '*.txt' \))
 
 html_data.c html_data.h: $(HTML) tools/output/fileadder
-	tools/output/fileadder -a $(HTML_LOCATION) -s $(IMAGESIZE) -b BANK1 -d html -p html_data
+	tools/output/fileadder -a $(HTML_LOCATION) -e $(DEFAULT_CONFIG_LOCATION) -s $(IMAGESIZE) -b BANK1 -d html -p html_data
 
 $(VERSION_HEADER):
 	@echo "#ifndef VERSION_H" > $(VERSION_HEADER)
@@ -86,7 +86,7 @@ $(BUILDDIR)/rtlplayground-$(FILENAME_EXTENSION).bin: $(BUILDDIR)/rtlplayground.i
 	tools/output/imagebuilder -i $^ $@
 	tools/output/fileadder -a $(DEFAULT_CONFIG_LOCATION) -s $(IMAGESIZE) -d config.txt $@
 	tools/output/fileadder -a $(CONFIG_LOCATION) -s $(IMAGESIZE) -d config.txt $@
-	tools/output/fileadder -a $(HTML_LOCATION) -s $(IMAGESIZE) -d html -p html_data -b BANK1 $@
+	tools/output/fileadder -a $(HTML_LOCATION) -e $(DEFAULT_CONFIG_LOCATION) -s $(IMAGESIZE) -d html -p html_data -b BANK1 $@
 	tools/output/crc_calculator -u $@
 	ln -sf $(MACHINE)/rtlplayground-$(FILENAME_EXTENSION).bin output/rtlplayground.bin
 

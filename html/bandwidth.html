@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/main.js"></script>
   <script src="/i18n.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -7,14 +9,24 @@
   </head>
   <body>
     <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
-    <h1 data-i18n="bw_heading">Ingress and Egress Bandwidth</h1>
-    <table id="bwtable">
-      <tr> <th> </th> <th colspan="3" data-i18n="bw_ingress"> Ingress </th> <th colspan="2" data-i18n="bw_egress">Egress</th>  <th></th></tr>
-      <tr> <th data-i18n="bw_col_port">Port</th> <th data-i18n="bw_col_limit">Limit</th> <th data-i18n="bw_col_bandwidth">Bandwidth [kBit/s]</th> <th data-i18n="bw_col_flow">Flow Control</th> <th data-i18n="bw_col_limit">Limit</th> <th data-i18n="bw_col_bandwidth">Bandwidth [kBit/s]</th> <th data-i18n="bw_col_apply">Apply</th></tr>
-    </table>
-    <script src="/bandwidth.js"></script>
+    <div class="page-shell">
+      <header class="page-heading">
+        <div><span class="eyebrow" data-i18n="bw_eyebrow">TRAFFIC CONTROL</span><h1 data-i18n="bw_heading">Ingress and Egress Bandwidth</h1><p data-i18n="bw_description">Apply rate limits independently in each direction.</p></div>
+        <span class="status-pill neutral" data-i18n="bw_per_port_limits">Per-port limits</span>
+      </header>
+      <section class="panel port-status-panel">
+        <div class="panel-heading"><div><h2 data-i18n="ui_port_status">Port Status</h2><p data-i18n="ui_live_link_state">Live physical link state</p></div><span class="live-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span></div>
+        <div id="ports"></div>
+      </section>
+      <div class="info-banner"><span class="banner-icon">i</span><div><strong data-i18n="bw_info_title">Rate values use kBit/s</strong><p data-i18n="bw_info_description">Enable a direction, enter the required bandwidth, then apply the row. Flow control is available with ingress limiting.</p></div></div>
+      <section class="panel table-panel">
+        <div class="panel-heading"><div><h2 data-i18n="bw_rate_limiting">Rate Limiting</h2><p data-i18n="bw_rate_description">Ingress, egress, and flow control by interface</p></div></div>
+        <table id="bwtable">
+          <tr> <th> </th> <th colspan="3" data-i18n="bw_ingress"> Ingress </th> <th colspan="2" data-i18n="bw_egress">Egress</th>  <th></th></tr>
+          <tr> <th data-i18n="bw_col_port">Port</th> <th data-i18n="bw_col_limit">Limit</th> <th data-i18n="bw_col_bandwidth">Bandwidth [kBit/s]</th> <th data-i18n="bw_col_flow">Flow Control</th> <th data-i18n="bw_col_limit">Limit</th> <th data-i18n="bw_col_bandwidth">Bandwidth [kBit/s]</th> <th data-i18n="bw_col_apply">Apply</th></tr>
+        </table>
+      </section>
+      <script src="/bandwidth.js"></script>
     </div>
     <script src="/navigation.js"></script>
   </body>

@@ -3,7 +3,7 @@
 
 #include <netinet/in.h>
 
-#define BUFFER_SIZE 24000
+#define BUFFER_SIZE 49152
 
 struct Server {
     int domain;
@@ -23,4 +23,3 @@ struct Server server_Constructor(int port, void (*launch)(struct Server *server)
 void launch(struct Server *server);
 
 #endif
-

@@ -16,12 +16,13 @@ function createPortTable() {
      for (let i = 1; i <= numPorts; i++) {
       if (pIsSFP[i-1])
         continue;
-      console.log("Table row: " + i + "pState: " + pState[i-2]);
+      console.log("Table row: " + i + "pState: " + pState[i-1]);
       const tr = tbl.insertRow();
+      tr.setAttribute('data-port', i);
       let td = tr.insertCell(); td.appendChild(document.createTextNode(t('common_port') + i));
       let portName = portNames[physToLogPort[i-1]] || '';
       td = tr.insertCell(); td.appendChild(document.createTextNode(portName));
-      td = tr.insertCell(); td.innerHTML = linkText(pState[i] + 1);
+      td = tr.insertCell(); td.innerHTML = linkText(pState[i-1] + 1);
       td = tr.insertCell(); td.innerHTML = sSelect.replaceAll("speed_sel", "speed_sel_" + i);
       td = tr.insertCell(); td.innerHTML = dSwitch.replaceAll("disable_port", "disable_port_" + i)
 						  .replace("portOnOff()", "portOnOff(" + i + ")");
@@ -31,7 +32,7 @@ function createPortTable() {
     }
   }
   tbl = document.getElementById('mtutable');
-  if (tbl.rows.length <= 2 && numPorts) {
+  if (tbl.rows.length === 0 && numPorts) {
      const mSelect = '<select name="mtu_sel" id="mtu_sel">'
       + '<option value="16383">16383</option>'
       + '<option value="1522">1522</option>'
@@ -40,21 +41,23 @@ function createPortTable() {
       + '<option value="9216">9216</option>'
       + '</select>';
       var tr = tbl.insertRow();
+      var th = document.createElement('th'); th.textContent = t('port_col_port'); tr.appendChild(th);
+      th = document.createElement('th'); th.textContent = 'MTU'; tr.appendChild(th);
+      th = document.createElement('th'); th.textContent = t('port_col_apply'); tr.appendChild(th);
+      var sfpIndex = 0;
       for (let i = 1; i <= numPorts; i++) {
+        tr = tbl.insertRow();
+        tr.setAttribute('data-port', i);
         let td = tr.insertCell();
-        if (pIsSFP[i-1])
-          td.innerHTML = '<object type="image/svg+xml" data="sfp.svg" width="60"></object>'
+        if (pIsSFP[i-1]) {
+          sfpIndex++;
+          td.innerHTML = '<span class="mtu-port"><object type="image/svg+xml" data="sfp.svg" width="45"></object>SFP+ ' + sfpIndex + '</span>';
+        }
         else
-          td.innerHTML = '<object type="image/svg+xml" data="port.svg" width="40"></object>'
-      }
-      tr = tbl.insertRow();
-      for (let i = 1; i <= numPorts; i++) {
-        let td = tr.insertCell();
+          td.innerHTML = '<span class="mtu-port"><object type="image/svg+xml" data="port.svg" width="32"></object>' + t('common_port') + i + '</span>';
+        td = tr.insertCell();
         td.innerHTML = mSelect.replaceAll("mtu_sel", "mtu_sel_" + i);
-      }
-      tr = tbl.insertRow();
-      for (let i = 1; i <= numPorts; i++) {
-        let td = tr.insertCell();
+        td = tr.insertCell();
         td.innerHTML = '<button type="button" style="margin: 0 0 0 24px" onclick="applyMTU(' + i + ');">' + t('port_apply') + '</button>';
       }
   }
@@ -68,7 +71,10 @@ function updatePortTable() {
   for (let i = 1; i <= numPorts ; i++) {
     if (pIsSFP[i-1])
       continue;
-    tbl.rows[i].cells[2].innerHTML = linkText(pState[i-1]+1);
+    var row = tbl.querySelector('tr[data-port="' + i + '"]');
+    if (!row)
+      continue;
+    row.cells[2].innerHTML = linkText(pState[i-1]+1);
     if (!clicked[i] && pState[i - 1] < 0) {
       document.getElementById('speed_sel_' + i).disabled = true;
       document.getElementById('disable_port_' + i).checked = true;

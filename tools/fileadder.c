@@ -11,6 +11,8 @@
 #include <string.h>
 #include <argp.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <zlib.h>
 
 #define OFFSET 2
 
@@ -39,18 +41,19 @@ const char *argp_program_bug_address = "<git@logicog.de>";
 static char doc[] = "Adds a file or a directory of files into an image";
 static char args_doc[] = "addfile [options] INPUT_IMAGE";
 static struct argp_option options[] = {
-    { "size", 's', "SIZE", 0, "Resize image"},
-    { "output", 'o', "FILE", 0, "Output image file name instead of overwriting input image"},
-    { "data", 'd', "FILE", 0, "File or directory to add to image"},
-    { "address", 'a', "SIZE", 0, "Address where data is placed, default is 0x1000000 if option is used, otherwise 0x1fd000"},
-    { "prefix", 'p', "FILE", 0, "Prefix for header and index file generation"},
-    { "bank", 'b', "BANKNAME", 0, "Generate #pragma with given bank-name"},
+    { "size", 's', "SIZE", 0, "Resize image", 0},
+    { "output", 'o', "FILE", 0, "Output image file name instead of overwriting input image", 0},
+    { "data", 'd', "FILE", 0, "File or directory to add to image", 0},
+    { "address", 'a', "SIZE", 0, "Address where data is placed, default is 0x1000000 if option is used, otherwise 0x1fd000", 0},
+    { "end-address", 'e', "SIZE", 0, "Fail if inserted data extends beyond this address", 0},
+    { "prefix", 'p', "FILE", 0, "Prefix for header and index file generation", 0},
+    { "bank", 'b', "BANKNAME", 0, "Generate #pragma with given bank-name", 0},
     { 0 }
 };
 
 
 struct arguments {
-	int size, address;
+	int size, address, end_address;
 	char *output_file;
 	char *data_file;
 	char *prefix;
@@ -66,6 +69,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 	switch (key) {
 	case 'a':
 		arguments->address = arg? atoi(arg): 0x100000; // Default address
+		break;
+	case 'e':
+		arguments->end_address = arg? atoi(arg): 0;
 		break;
 	case 's':
 		arguments->size = arg? atoi(arg): 0x200000; // Default size is 2MB
@@ -100,19 +106,26 @@ static struct argp argp = {
 
 int addfile(const char *name, int addr)
 {
-	int dataptr = open(name, 0);
-	if (!dataptr) {
-		fprintf(stderr, "%s: ", name);
-		perror("Cannot open file for reading");
-		return 0;
+	if (addr < 0 || addr >= BUFFER_SIZE - 1) {
+		fprintf(stderr, "Invalid insertion address 0x%x for %s\n", addr, name);
+		return -1;
 	}
 
-	int data_read = read(dataptr, &buffer[addr], sizeof(buffer) - addr);
+	int dataptr = open(name, 0);
+	if (dataptr < 0) {
+		fprintf(stderr, "%s: ", name);
+		perror("Cannot open file for reading");
+		return -1;
+	}
+
+	int data_read = read(dataptr, &buffer[addr], sizeof(buffer) - addr - 1);
 	if (data_read < 0) {
 		perror("Error reading file");
-		return 0;
+		close(dataptr);
+		return -1;
 	}
 	close(dataptr);
+	buffer[addr + data_read] = '\0';
 
 	return data_read;
 }
@@ -151,7 +164,67 @@ char *getMime(const char *name)
 }
 
 
-int addidx(const char *name, int addr, int len)
+bool isSupportedFile(const char *name)
+{
+	return hasSuffix(name, ".html") || hasSuffix(name, ".svg") ||
+	       hasSuffix(name, ".ico") || hasSuffix(name, ".png") ||
+	       hasSuffix(name, ".js") || hasSuffix(name, ".css") ||
+	       hasSuffix(name, ".txt");
+}
+
+
+bool shouldCompress(const char *name)
+{
+	return hasSuffix(name, ".html") || hasSuffix(name, ".svg") ||
+	       hasSuffix(name, ".ico") || hasSuffix(name, ".js") ||
+	       hasSuffix(name, ".css") || hasSuffix(name, ".txt");
+}
+
+
+int gzipCompress(const uint8_t *input, size_t input_len, uint8_t **output, size_t *output_len)
+{
+	z_stream stream = {0};
+	gz_header header = {0};
+	int result = deflateInit2(&stream, Z_BEST_COMPRESSION, Z_DEFLATED,
+				  15 + 16, 8, Z_DEFAULT_STRATEGY);
+	if (result != Z_OK)
+		return result;
+
+	/* Avoid embedding the build time or host OS in generated firmware. */
+	header.time = 0;
+	header.os = 255;
+	result = deflateSetHeader(&stream, &header);
+	if (result != Z_OK) {
+		deflateEnd(&stream);
+		return result;
+	}
+
+	size_t capacity = deflateBound(&stream, input_len);
+	*output = malloc(capacity);
+	if (!*output) {
+		deflateEnd(&stream);
+		return Z_MEM_ERROR;
+	}
+
+	stream.next_in = (Bytef *)input;
+	stream.avail_in = input_len;
+	stream.next_out = *output;
+	stream.avail_out = capacity;
+	result = deflate(&stream, Z_FINISH);
+	if (result != Z_STREAM_END) {
+		free(*output);
+		*output = NULL;
+		deflateEnd(&stream);
+		return result;
+	}
+
+	*output_len = stream.total_out;
+	deflateEnd(&stream);
+	return Z_OK;
+}
+
+
+int addidx(const char *name, int addr, int len, bool gzip)
 {
 	char s[256];
 	int i = 0;
@@ -164,9 +237,13 @@ int addidx(const char *name, int addr, int len)
 
 	defbuf_p += snprintf(&dbuf[defbuf_p], DEF_SIZE - defbuf_p, "#define FDATA_START_%s 0x%x\n", s, addr);
 	defbuf_p += snprintf(&dbuf[defbuf_p], DEF_SIZE - defbuf_p, "#define FDATA_SIZE_%s %d\n", s, len);
-	ibuf_p += snprintf(&ibuf[ibuf_p], INDEX_SIZE - ibuf_p, "  {\"/%s\", FDATA_START_%s, FDATA_SIZE_%s, %s},\n", name, s, s, getMime(name));
+	ibuf_p += snprintf(&ibuf[ibuf_p], INDEX_SIZE - ibuf_p,
+			   "  {\"/%s\", FDATA_START_%s, FDATA_SIZE_%s, %s, %s},\n",
+			   name, s, s, getMime(name), gzip ? "ENCODING_GZIP" : "ENCODING_IDENTITY");
 	if (!strcmp(name, "index.html"))
-		ibuf_p += snprintf(&ibuf[ibuf_p], INDEX_SIZE - ibuf_p, "  {\"/\", FDATA_START_%s, FDATA_SIZE_%s, mime_HTML},\n", s, s);
+		ibuf_p += snprintf(&ibuf[ibuf_p], INDEX_SIZE - ibuf_p,
+				   "  {\"/\", FDATA_START_%s, FDATA_SIZE_%s, mime_HTML, %s},\n",
+				   s, s, gzip ? "ENCODING_GZIP" : "ENCODING_IDENTITY");
 	return 0;
 }
 
@@ -223,6 +300,7 @@ int main(int argc, char **argv)
 
 	arguments.add_zero = true;
 	arguments.address = 0x1fd000;
+	arguments.end_address = 0;
 	arguments.size = 0;
 	arguments.overwrite = true;
 	arguments.prefix = 0;
@@ -269,7 +347,9 @@ int main(int argc, char **argv)
 	defbuf_p += snprintf(&dbuf[defbuf_p], DEF_SIZE - defbuf_p, "#include <stdint.h>\n\n");
 	defbuf_p += snprintf(&dbuf[defbuf_p], DEF_SIZE - defbuf_p,
 			     "typedef enum mime_type_e {\n  mime_HTML = 0,\n  mime_SVG,\n  mime_ICO,\n  mime_PNG,\n  mime_JS,\n  mime_CSS,\n  mime_TXT\n} mime_type_t;\n\n");
-	defbuf_p += snprintf(&dbuf[defbuf_p], DEF_SIZE - defbuf_p, "struct f_data {\n  __code char *file;\n  uint32_t start;\n  uint16_t len;\n  mime_type_t mime;\n};\n\n");
+	defbuf_p += snprintf(&dbuf[defbuf_p], DEF_SIZE - defbuf_p,
+			     "#define ENCODING_IDENTITY 0\n#define ENCODING_GZIP 1\n\n");
+	defbuf_p += snprintf(&dbuf[defbuf_p], DEF_SIZE - defbuf_p, "struct f_data {\n  __code char *file;\n  uint32_t start;\n  uint16_t len;\n  mime_type_t mime;\n  uint8_t encoding;\n};\n\n");
 	// defbuf_p += snprintf(&dbuf[defbuf_p], DEF_SIZE - defbuf_p, "typedef uint16_t (* fcall_ptr)(void);\n\n");
 
 	ibuf_p += snprintf(&ibuf[ibuf_p], INDEX_SIZE - ibuf_p, "// This file is automatically generated, do not edit!\n\n");
@@ -284,57 +364,104 @@ int main(int argc, char **argv)
 
 	// Now that the beginning of the buffer is filled with out image, optionally resize the image
 	if (filesize)
-		filesize = arguments.size? arguments.size : filesize;
+		filesize = arguments.size ? (size_t)arguments.size : filesize;
 
-	if (stat(arguments.data_file, &s) == 0 && s.st_mode & S_IFDIR) {
+	if (stat(arguments.data_file, &s) == 0 && S_ISDIR(s.st_mode)) {
 		printf("Adding entries in directory %s\n", arguments.data_file);
 		addsDir = true;
-		DIR *dirptr = opendir(arguments.data_file);
-		if (!dirptr) {
+		struct dirent **entries;
+		int entry_count = scandir(arguments.data_file, &entries, NULL, alphasort);
+		if (entry_count < 0) {
 			fprintf(stderr, "%s: ", arguments.data_file);
 			perror("Error opening directory");
 			return 5;
 		}
-		struct dirent *in_file;
 		int addr = arguments.address;
-		while ( (in_file = readdir(dirptr)) )  {
+		for (int entry_idx = 0; entry_idx < entry_count; entry_idx++)  {
+			struct dirent *in_file = entries[entry_idx];
 			snprintf(pathbuffer, PATH_SIZE, "%s/%s", arguments.data_file, in_file->d_name);
 			if (stat(pathbuffer, &s) < 0) {
 				fprintf(stderr, "%s: ", pathbuffer);
 				perror("Stat failed");
+				free(in_file);
 				continue;
 			}
-			if (! (s.st_mode & S_IFREG))
+			if (!S_ISREG(s.st_mode) || !isSupportedFile(in_file->d_name)) {
+				free(in_file);
 				continue;
+			}
 
-			size_t data_read = addfile(pathbuffer, addr);
-			if (data_read) {
-				if (arguments.add_zero) {
-					buffer[addr + data_read + 1] = '\0';
-					data_read++;
-				}
-				printf("Data inserted from %s at 0x%x, size: %ld\n", pathbuffer, addr, data_read);
+			int bytes_read = addfile(pathbuffer, addr);
+			if (bytes_read < 0) {
+				free(in_file);
+				free(entries);
+				return 5;
 			}
-			int old_len = data_read;
-			data_read = replaceCalls(addr);
-			if (old_len > data_read)
-				memset(buffer + addr + data_read, 0, old_len - data_read);
-			addidx(in_file->d_name, addr, data_read);
+
+			size_t data_read = bytes_read;
+			if (hasSuffix(in_file->d_name, ".html"))
+				data_read = replaceCalls(addr);
+
+			bool gzip = false;
+			uint8_t *compressed = NULL;
+			size_t compressed_len = 0;
+			if (data_read && shouldCompress(in_file->d_name)) {
+				int zresult = gzipCompress((uint8_t *)&buffer[addr], data_read,
+							   &compressed, &compressed_len);
+				if (zresult != Z_OK) {
+					fprintf(stderr, "Unable to compress %s: zlib error %d\n", pathbuffer, zresult);
+					free(in_file);
+					free(entries);
+					return 5;
+				}
+				if (compressed_len < data_read) {
+					memcpy(&buffer[addr], compressed, compressed_len);
+					data_read = compressed_len;
+					gzip = true;
+				}
+				free(compressed);
+			}
+
+			if (arguments.end_address && addr + data_read > (size_t)arguments.end_address) {
+				fprintf(stderr,
+					"Resource area overflow: %s ends at 0x%lx, limit is 0x%x\n",
+					pathbuffer, (unsigned long)(addr + data_read), arguments.end_address);
+				free(in_file);
+				free(entries);
+				return 5;
+			}
+
+			printf("Data inserted from %s at 0x%x, stored: %ld, encoding: %s\n",
+			       pathbuffer, addr, data_read, gzip ? "gzip" : "identity");
+			addidx(in_file->d_name, addr, data_read, gzip);
 			addr += data_read;
+			free(in_file);
 		}
+		free(entries);
+		printf("Resource area used: %d bytes, free: %d bytes\n",
+		       addr - arguments.address,
+		       arguments.end_address ? arguments.end_address - addr : BUFFER_SIZE - addr);
 	} else {
-		size_t data_read = addfile(arguments.data_file, arguments.address);
+		int bytes_read = addfile(arguments.data_file, arguments.address);
+		if (bytes_read < 0)
+			return 5;
+		size_t data_read = bytes_read;
 
 		if (data_read) {
 			if (arguments.add_zero) {
-				buffer[arguments.address + data_read + 1] = '\0';
+				buffer[arguments.address + data_read] = '\0';
 				data_read++;
+			}
+			if (arguments.end_address && arguments.address + data_read > (size_t)arguments.end_address) {
+				fprintf(stderr, "Inserted data ends at 0x%lx, limit is 0x%x\n",
+					(unsigned long)(arguments.address + data_read), arguments.end_address);
+				return 5;
 			}
 			printf("Data inserted at 0x%x, size: %ld\n", arguments.address, data_read);
 		}
 	}
 
-	ibuf_p += snprintf(&ibuf[ibuf_p], INDEX_SIZE - ibuf_p, "  {0, 0, 0}\n};\n");
+	ibuf_p += snprintf(&ibuf[ibuf_p], INDEX_SIZE - ibuf_p, "  {0, 0, 0, 0, ENCODING_IDENTITY}\n};\n");
 	// fbuf_p += snprintf(&fbuf[fbuf_p], DEF_SIZE - fbuf_p, "};\n");
 	defbuf_p += snprintf(&dbuf[defbuf_p], DEF_SIZE - defbuf_p, "#endif\n");
 

@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title data-i18n="login_title">RTL Switch Login</title>
   <link rel="stylesheet" href="style.css">
   <script src="/i18n.js"></script>
   <script>
     function removeNote() {
       document.getElementById("incorrect").innerHTML = "";
+    }
+    function togglePassword() {
+      var input = document.getElementById('loginPassword');
+      input.type = input.type === 'password' ? 'text' : 'password';
     }
     window.addEventListener("load", function() {
       if (document.referrer.endsWith("login.html"))
@@ -15,16 +21,22 @@
 </head>
 
 <body class="login_page">
-  <div class = "center">
-  <h1 data-i18n="login_heading"> RTL Switch Login</h1>
-  <form method="post" action="login">
-  <div class="txt_field">
-    <input name="pwd" type="password" onclick="removeNote()" required />
-    <span></span>
-    <label data-i18n="login_password">Password</label>
+  <div class="center login-card">
+    <div class="login-brand"><div class="brand-mark" aria-hidden="true"><span></span></div><div><strong>RTLPlayground</strong><span data-i18n="ui_switch_management">Switch Management</span></div></div>
+    <h1 data-i18n="login_heading">Sign in to your switch</h1>
+    <p class="login-intro" data-i18n="login_intro">Enter the local administrator password to continue.</p>
+    <form method="post" action="login">
+      <label class="login-label" for="loginPassword" data-i18n="login_password">Password</label>
+      <div class="password-field">
+        <span aria-hidden="true">&#128274;</span>
+        <input id="loginPassword" name="pwd" type="password" onclick="removeNote()" autocomplete="current-password" required />
+        <button type="button" class="password-toggle" onclick="togglePassword()" data-i18n-aria-label="login_show_password" aria-label="Show or hide password">&#9673;</button>
+      </div>
+      <input type="submit" data-i18n="login_login" value="Sign In"/>
+      <h3 id="incorrect"></h3>
+    </form>
+    <div class="local-access"><span class="status-dot"></span><span data-i18n="login_local_access">Local device access</span></div>
+    <footer data-i18n="login_firmware">RTLPlayground Firmware</footer>
   </div>
-  <input type="submit" data-i18n="login_login" value="Login"/>
-  <h3 id="incorrect" style="margin-top: 5em;"></h3>
-  </form>
 </body>
 </html>

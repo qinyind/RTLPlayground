@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/main.js"></script>
   <script src="/i18n.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -7,20 +9,30 @@
   </head>
   <body>
     <nav id="sidebar"></nav>
-    <div style="margin-left:16%;padding:1px 16px;height:1000px;">
-    <div id="ports"></div>
-    <h1 data-i18n="mirror_heading">Mirror Configuration</h1>
-    <label class="tswitch"><span data-i18n="mirror_enabled">Enabled:</span> <input id="me" type="checkbox"></label><br/>
-    <label for="mp"><span data-i18n="mirror_port">Mirroring Port:</span></label> <input type="number" id="mp" name="mp" min="1" max="9"/>
-    <h2 data-i18n="mirror_tx">Mirrored Ports (TX)</h2>
-    <div id="mPortsTX"></div>
-    <br />
-    <h2 data-i18n="mirror_rx">Mirrored Ports (RX)</h2>
-    <div id="mPortsRX"></div>
-    <br/> <input style="width:15%;" class="action" id="mirror_sub" onclick="mirrorSub();" type="button" data-i18n="mirror_update" value="Update / Create">
-    <input style="width:15%;" class="action" id="mirror_del" onclick="mirrorDel();" type="button" data-i18n="mirror_disable" value="Disable Mirroring">
-    <script src="/mirror.js"></script>
-    <script src="/mirror_sub.js"></script>
+    <div class="page-shell">
+      <header class="page-heading">
+        <div><span class="eyebrow" data-i18n="mirror_eyebrow">TRAFFIC ANALYSIS</span><h1 data-i18n="mirror_heading">Mirror Configuration</h1><p data-i18n="mirror_description">Copy selected ingress or egress traffic to an analyzer port.</p></div>
+        <span class="status-pill neutral" data-i18n="mirror_session">Session configuration</span>
+      </header>
+      <section class="panel port-status-panel">
+        <div class="panel-heading"><div><h2 data-i18n="ui_port_status">Port Status</h2><p data-i18n="ui_live_link_state">Live physical link state</p></div><span class="live-pill"><span></span><span class="status-state-text" data-i18n="ui_unknown">Unknown</span></span></div>
+        <div id="ports"></div>
+      </section>
+      <div class="content-grid content-grid-aside">
+        <section class="panel configuration-panel">
+          <div class="panel-heading"><div><h2 data-i18n="mirror_panel_heading">Port Mirroring</h2><p data-i18n="mirror_panel_description">Choose one destination and any number of sources.</p></div><label class="toggle-control"><input id="me" type="checkbox"><span></span><b data-i18n="mirror_enabled">Enabled</b></label></div>
+          <label class="field-row" for="mp"><span data-i18n="mirror_port">Mirroring Port:</span><input type="number" id="mp" name="mp" min="1" max="9"/></label>
+          <div class="mirror-grid">
+            <section><div class="subsection-heading"><h3 data-i18n="mirror_rx">Mirrored Ports (RX)</h3><span data-i18n="ui_ingress">Ingress</span></div><div id="mPortsRX" class="port-picker"></div></section>
+            <section><div class="subsection-heading"><h3 data-i18n="mirror_tx">Mirrored Ports (TX)</h3><span data-i18n="ui_egress">Egress</span></div><div id="mPortsTX" class="port-picker"></div></section>
+          </div>
+          <div class="info-banner compact"><span class="banner-icon">i</span><p data-i18n="mirror_copy_description">Selected source traffic is copied to the destination port without changing normal forwarding.</p></div>
+          <div class="form-actions"><input class="action" id="mirror_sub" onclick="mirrorSub();" type="button" data-i18n="mirror_update" value="Update / Create"><input class="action danger-button" id="mirror_del" onclick="mirrorDel();" type="button" data-i18n="mirror_disable" value="Disable Mirroring"></div>
+        </section>
+        <aside class="panel summary-panel"><div class="panel-heading"><div><h2 data-i18n="mirror_notes">Configuration Notes</h2></div></div><ul class="check-list"><li data-i18n="mirror_note_1">Use a dedicated analyzer port.</li><li data-i18n="mirror_note_2">A source may mirror RX, TX, or both.</li><li data-i18n="mirror_note_3">Do not select the destination as a source.</li></ul></aside>
+      </div>
+      <script src="/mirror.js"></script>
+      <script src="/mirror_sub.js"></script>
     </div>
     <script src="/navigation.js"></script>
   </body>
